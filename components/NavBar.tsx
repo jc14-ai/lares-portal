@@ -52,8 +52,8 @@ export default function NavBar(){
     const [projectHovered, setProjectHovered] = useState<string>("");
 
     return (
-        <nav className="flex fixed items-center bg-blue-900 w-screen min-h-[50px] h-fit p-4 z-2 top-0">
-            <h1 className="flex justify-center items-center font-bold text-white text-xl min-w-[240px]">LRA-LARES</h1>
+        <nav className="flex fixed items-center bg-blue-900 w-screen min-h-12.5 h-fit p-4 z-2 top-0">
+            <h1 className="flex justify-center items-center font-bold text-white text-xl min-w-60">LRA-LARES</h1>
             {buttons.map(button => (
                 button.type === 'button' ? 
                 <button key={button.name} className={"ml-4 text-white rounded hover:bg-blue-800 p-2 min-w-fit duration-200 cursor-pointer font-bold"} 
@@ -72,10 +72,10 @@ export default function NavBar(){
                 }}>
                     {button.name}
                     {button.projects  && button.name === projectHovered ? 
-                    <div className="absolute bg-white border border-gray-200 min-w-[200px] w-fit h-fit rounded mt-2">
+                    <div className="absolute bg-white border border-gray-200 min-w-50 w-fit h-fit rounded mt-2">
                         {button.projects.map(proj => (
                             <p key={proj} className="flex text-black p-3 hover:bg-gray-100 hover:text-blue-800 duration-200 cursor-pointer font-bold text-[0.9em]"
-                            onClick={() => router.push(`/projects/${proj.toLowerCase().replace(/\s+/g, '-').replace(/\./g,'-')}`)}>
+                            onClick={() => router.push(`/projects/${encodeURIComponent(proj)}`)}>
                                 {proj}
                             </p>
                         ))}

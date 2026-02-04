@@ -1,6 +1,6 @@
 export default function Prioritization(){
     return (
-        <div className="flex flex-col rounded-xl border border-gray-100 shadow min-w-full md:min-w-[70%] lg:min-w-[70%] p-4 gap-4 min-h-[600px]">
+        <div className="flex flex-col rounded-xl border border-gray-100 shadow min-w-full md:min-w-[70%] lg:min-w-[70%] p-4 gap-4 min-h-150">
             <h1 className="text-black font-bold text-base md:text-xl lg:text-2xl">
                 Prioritization
             </h1>

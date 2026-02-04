@@ -4,7 +4,7 @@ export default function Calendar(){
             <h1 className="font-bold text-base md:text-xl lg:text-2xl text-black">
                 Calendar of events
             </h1>
-            <div className="w-full h-[450px] bg-gray-100 rounded border overflow-hidden">
+            <div className="w-full h-112.5 bg-gray-100 rounded border overflow-hidden">
                 <iframe 
                     src="https://calendar.google.com/calendar/embed?src=en.philippines%23holiday%40group.v.calendar.google.com&ctz=Asia%2FManila"
                     style={{ border: 0 }}

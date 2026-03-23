@@ -11,7 +11,7 @@ export default function DashboardAccess(){
         <div className="flex justify-between items-center p-4 rounded-xl border border-gray-100 shadow w-[90%] min-h-30 h-fit cursor-pointer hover:border-blue-500 duration-200 mb-4 group"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        onClick={() => router.push('/')}>
+        onClick={() => router.push('http://localhost:3000/')}>
             <span className="flex items-center gap-2">
                 <div className="md:flex lg:flex justify-center items-center bg-blue-100 rounded-full hidden md:h-10 md:w-10 lg:h-15 lg:w-15 group-hover:bg-blue-700 duration-200 p-2">
                     <img className="w-[50%]" src={`${hovered ? '/stat-white.png' : '/stat-blue.png'}`}/>

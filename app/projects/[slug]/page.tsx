@@ -19,7 +19,7 @@ export default async function Page({params}: {params: Promise<{slug: string}>}) 
                     </span>
                     <div className="bg-white border border-gray-200 h-150 w-full rounded-xl shadow-sm relative overflow-hidden">
                         <iframe
-                        src="https://docs.google.com/spreadsheets" // TODO: put the source for the google spreadsheet 
+                        src="https://docs.google.com/spreadsheets/d/1MiZJPsul2OAzqL2PqCcVUlmVvwZViA5DPZz3GiJlj9M/edit?usp=sharing" // TODO: put the source for the google spreadsheet 
                         style={{width:'100%', height:'100%', border:'none'}}
                         title="Project Plan"
                         />

@@ -101,7 +101,7 @@ export default function NavBar(){
                             <svg className="w-4 h-4 ml-1 md:hidden inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                         </button>
                         {button.projects  && button.name === projectHovered ? 
-                        <div className="md:absolute static bg-white border border-gray-200 min-w-50 w-full md:w-max h-fit rounded mt-2 md:left-0 shadow-lg z-50 flex flex-col items-start overflow-hidden">
+                        <div className="md:absolute static bg-white border border-gray-200 min-w-50 w-full md:w-max h-fit rounded md:left-0 shadow-lg z-50 flex flex-col items-start overflow-hidden">
                             {button.projects.map(proj => (
                                 <p key={proj} className="w-full text-black p-3 hover:bg-gray-100 hover:text-blue-800 duration-200 cursor-pointer font-bold text-[0.9em] text-left"
                                 onClick={(e) => {

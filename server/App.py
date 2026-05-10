@@ -2,6 +2,11 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from google.oauth2.service_account import Credentials
 import gspread
+from dotenv import load_dotenv
+import os
+
+load_dotenv("credentials/.env")
+
 app = Flask(__name__)
 
 CORS(app)
@@ -17,7 +22,7 @@ def init():
 
     client = gspread.authorize(creds)
 
-    spreadsheet_id = "1FSY9iphvfd4OixE8NpnH7_Zi-W62Sxo0CJPibWgUCww"
+    spreadsheet_id = os.getenv("SPREADSHEET_ID")
     sheet = client.open_by_key(spreadsheet_id)
 
     worksheet = sheet.worksheet("eSP Rebuild SOW4")
@@ -30,8 +35,20 @@ def init():
 
 @app.route("/data", methods=["GET"])
 def get_data():
+    records = [
+        {
+            'id': row['#'],
+            'activity': row["Activity"], 
+            'owner': row['Owner'],
+            'planStart': row['Plan Start'],
+            'planEnd': row['Plan End'],
+            'actualStart': row['Actual Start'],
+            'actualEnd': row['Actual End'],
+            'status': row['Status'],
+            'comments': row['Comments']
+        } for row in data]
     
-    return jsonify(data)
+    return jsonify(records)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001, debug=True)

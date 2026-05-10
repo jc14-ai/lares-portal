@@ -53,7 +53,7 @@ export default function NavBar(){
     const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
 
     return (
-        <nav className="flex flex-wrap items-center bg-blue-900 w-full min-h-12.5 h-fit p-4 z-50 fixed top-0 left-0">
+        <nav className="flex flex-wrap items-center bg-blue-900 w-full min-h-12.5 h-fit p-4 z-100 fixed top-0 left-0">
             <h1 className="flex justify-center items-center font-bold text-white text-xl md:min-w-60 min-w-fit">LRA-LARES</h1>
             
             <div className="md:hidden ml-auto">

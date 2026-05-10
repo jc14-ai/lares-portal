@@ -6,5 +6,5 @@ export async function GET(){
     const res = await fetch("http://localhost:5001/data");
     const data = await res.json();
 
-    return NextResponse.json({data:data});
+    return NextResponse.json(data);
 }

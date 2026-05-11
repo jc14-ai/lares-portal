@@ -11,8 +11,18 @@ app = Flask(__name__)
 
 CORS(app)
 
-@app.route("/")
+@app.route("/", methods=["POST"])
 def init():
+    
+    res = request.get_json()
+    if not res:
+        return jsonify({"error": "No JSON data provided"}), 400
+    
+    project = res.get('project')
+    if not project:
+        return jsonify({"error": "Project name is required"}), 400
+
+    
     scope = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
     creds = Credentials.from_service_account_file(
@@ -24,28 +34,34 @@ def init():
 
     spreadsheet_id = os.getenv("SPREADSHEET_ID")
     sheet = client.open_by_key(spreadsheet_id)
-
-    worksheet = sheet.worksheet("eSP Rebuild SOW4")
+    
+    worksheet = None
+    if str(project) == "eSerbisyo Portal":
+        worksheet = sheet.worksheet("eSP Rebuild SOW4")
 
     global data
-    
-    data = worksheet.get_all_records()
+    if worksheet:
+        data = worksheet.get_all_records()
+    else:
+        data = []
+
 
     return jsonify({"message": "Initialized successfully"})
+
 
 @app.route("/data", methods=["GET"])
 def get_data():
     records = [
         {
-            'id': row['#'],
-            'activity': row["Activity"], 
-            'owner': row['Owner'],
-            'planStart': row['Plan Start'],
-            'planEnd': row['Plan End'],
-            'actualStart': row['Actual Start'],
-            'actualEnd': row['Actual End'],
-            'status': row['Status'],
-            'comments': row['Comments']
+            'id': row.get('#', ''),
+            'activity': row.get("Activity", ""), 
+            'owner': row.get('Owner', ""),
+            'planStart': row.get('Plan Start', ""),
+            'planEnd': row.get('Plan End', ""),
+            'actualStart': row.get('Actual Start', ""),
+            'actualEnd': row.get('Actual End', ""),
+            'status': row.get('Status', ""),
+            'comments': row.get('Comments', "")
         } for row in data]
     
     return jsonify(records)

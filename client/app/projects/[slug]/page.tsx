@@ -25,15 +25,19 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
     useEffect(() => {
         async function fetchData() {
             try {
-                const res = await fetch("/api/data");
+                setData([]);
+                const res = await fetch(`/api/data?project=${encodeURIComponent(project)}`);
                 const result = await res.json();
-                setData(result);
+
+                if(result){
+                    setData(result);
+                }
             } catch (error) {
                 console.error(error);
             }
         }
         fetchData();
-    }, []);
+    }, [project]);
 
     const filteredData = data.filter(item => item["planStart"] && item["planEnd"]);
 
@@ -64,7 +68,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                             Live Preview
                         </p>
                     </span>
-                    <Timeline
+                    {filteredData.length > 1 ? <Timeline
                         className="bg-white border border-gray-200 h-[600px] w-full rounded-xl shadow-sm"
                         groups={filteredData.map((item, index) => ({ id: index, title: item["activity"] }))}
                         items={filteredData.map((item, index) => ({
@@ -81,7 +85,9 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                         defaultTimeEnd={moment().endOf('month').valueOf()}
                         stackItems
                         lineHeight={50}
-                    />
+                    /> : <div className="flex justify-center items-center bg-white border border-gray-200 h-[600px] w-full rounded-xl shadow-sm">
+                            <h1 className="text-gray-500 italic text-xl">Work plan not available.</h1>
+                        </div>}
                 </div>
                 <Downloadables />
 

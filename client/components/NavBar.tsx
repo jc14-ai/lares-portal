@@ -53,15 +53,17 @@ export default function NavBar(){
     const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
 
     return (
-        <nav className="flex flex-wrap items-center bg-blue-900 w-full min-h-12.5 h-fit p-4 z-100 fixed top-0 left-0">
-            <h1 className="flex justify-center items-center font-bold text-white text-xl md:min-w-60 min-w-fit">LRA-LARES</h1>
+        <nav className="flex flex-wrap items-center bg-blue-900/90 backdrop-blur-md w-full min-h-16 h-fit px-8 py-3 z-[100] fixed top-0 left-0 border-b border-white/10 shadow-lg">
+            <div className="flex items-center cursor-pointer" onClick={() => router.push('/')}>
+                <h1 className="font-black text-white text-2xl tracking-tighter uppercase">LRA-LARES</h1>
+            </div>
             
             <div className="md:hidden ml-auto">
                 <button 
                     onClick={() => setIsMenuOpen(!isMenuOpen)} 
-                    className="text-white hover:text-gray-300 focus:outline-none p-2"
+                    className="text-white hover:text-blue-200 transition-colors p-2 rounded-lg bg-white/5"
                 >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         {isMenuOpen ? (
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         ) : (
@@ -71,10 +73,10 @@ export default function NavBar(){
                 </button>
             </div>
 
-            <div className={`${isMenuOpen ? "flex" : "hidden"} w-full md:flex md:w-auto flex-col md:flex-row md:items-center mt-4 md:mt-0`}>
+            <div className={`${isMenuOpen ? "flex" : "hidden"} w-full md:flex md:w-auto flex-col md:flex-row md:items-center mt-4 md:mt-0 ml-auto gap-1`}>
                 {buttons.map(button => (
                     button.type === 'button' ? 
-                    <button key={button.name} className={"md:ml-4 text-white rounded hover:bg-blue-800 p-2 min-w-fit duration-200 cursor-pointer font-bold text-left md:text-center mt-2 md:mt-0"} 
+                    <button key={button.name} className="px-4 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300 font-bold text-sm text-left md:text-center mt-1 md:mt-0" 
                     onClick={() => {
                         if(button.redirect) router.push(button.redirect);
                         setIsMenuOpen(false);
@@ -82,41 +84,34 @@ export default function NavBar(){
                         {button.name}
                     </button>
                     : 
-                    <div key={button.name} className="md:ml-4 relative mt-2 md:mt-0"
-                    onMouseEnter={() => {
-                        setProjectHovered(button.name);
-                    }}
-                    onMouseLeave={() => {
-                        setProjectHovered("");
-                    }}>
-                        <button className="w-full text-white rounded hover:bg-blue-800 p-2 min-w-fit duration-200 cursor-pointer font-bold text-left md:text-center flex items-center justify-between md:inline-block" 
-                        onClick={() => {
-                            if (projectHovered === button.name) {
-                                setProjectHovered("");
-                            } else {
-                                setProjectHovered(button.name);
-                            }
-                        }}>
+                    <div key={button.name} className="relative mt-1 md:mt-0"
+                    onMouseEnter={() => setProjectHovered(button.name)}
+                    onMouseLeave={() => setProjectHovered("")}>
+                        <button className={`w-full px-4 py-2 rounded-xl transition-all duration-300 font-bold text-sm text-left md:text-center flex items-center justify-between gap-1 ${projectHovered === button.name ? 'bg-white/15 text-white' : 'text-white/90 hover:text-white hover:bg-white/10'}`} 
+                        onClick={() => setProjectHovered(projectHovered === button.name ? "" : button.name)}>
                             <span>{button.name}</span>
-                            <svg className="w-4 h-4 ml-1 md:hidden inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                            <svg className={`w-4 h-4 transition-transform duration-300 ${projectHovered === button.name ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                         </button>
-                        {button.projects  && button.name === projectHovered ? 
-                        <div className="md:absolute static bg-white border border-gray-200 min-w-50 w-full md:w-max h-fit rounded md:left-0 shadow-lg z-50 flex flex-col items-start overflow-hidden">
-                            {button.projects.map(proj => (
-                                <p key={proj} className="w-full text-black p-3 hover:bg-gray-100 hover:text-blue-800 duration-200 cursor-pointer font-bold text-[0.9em] text-left"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    router.push(`/projects/${encodeURIComponent(proj)}`);
-                                    setIsMenuOpen(false);
-                                    setProjectHovered("");
-                                }}>
-                                    {proj}
-                                </p>
-                            ))}
-                        </div> 
-                        : 
-                        null
-                        }
+                        
+                        {button.projects && button.name === projectHovered && (
+                            <div className="md:absolute static bg-white border border-gray-100 min-w-[240px] w-full h-fit rounded-2xl md:right-0 shadow-2xl z-[110] flex flex-col p-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="px-3 py-2 mb-1">
+                                    <p className="text-[0.65em] font-black text-gray-400 uppercase tracking-widest">{button.name} Sub-Projects</p>
+                                </div>
+                                {button.projects.map(proj => (
+                                    <button key={proj} className="w-full text-gray-700 px-3 py-2.5 hover:bg-blue-50 hover:text-blue-700 rounded-xl transition-all duration-200 font-bold text-sm text-left flex items-center justify-between group"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        router.push(`/projects/${encodeURIComponent(proj)}`);
+                                        setIsMenuOpen(false);
+                                        setProjectHovered("");
+                                    }}>
+                                        <span>{proj}</span>
+                                        <svg className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                                    </button>
+                                ))}
+                            </div> 
+                        )}
                     </div>
                 ))}
             </div>

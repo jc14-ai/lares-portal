@@ -14,16 +14,15 @@ type ProjectProps = {
     "planStart": string;
     "planEnd": string;
     "owner": string;
-    "status": string;
+    "status": "Completed" | "In progress" | "Not started";
 }
 
 const getStatusColor = (status: string) => {
-    const s = status?.toLowerCase();
-    if (s?.includes('complete')) return 'bg-emerald-500 hover:bg-emerald-600';
-    if (s?.includes('progress') || s?.includes('ongoing')) return 'bg-sky-500 hover:bg-sky-600';
-    if (s?.includes('delayed') || s?.includes('late')) return 'bg-rose-500 hover:bg-rose-600';
-    if (s?.includes('Not started') || s?.includes('pending')) return 'bg-slate-400 hover:bg-slate-500';
-    return 'bg-indigo-500 hover:bg-indigo-600';
+    const s = status?.toLowerCase() || '';
+    if (s.includes('complete')) return '!bg-emerald-500 hover:!bg-emerald-600';
+    if (s.includes('progress') || s.includes('ongoing')) return '!bg-sky-500 hover:!bg-sky-600';
+    if (s.includes('not started') || s.includes('pending')) return '!bg-slate-400 hover:!bg-slate-500';
+    return '!bg-indigo-500 hover:!bg-indigo-600';
 };
 
 export default function Page({ params }: { params: Promise<{ slug: string }> }) {
@@ -53,14 +52,28 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
     const groups = filteredData.map((item, index) => ({
         id: index,
         title: (
-            <div className="flex w-full items-center text-[0.7em] font-semibold py-2">
-                <div className="flex-1 truncate pr-3 text-black font-bold uppercase tracking-tight">{item["activity"]}</div>
-                <div className="flex flex-wrap items-center justify-center w-[150px] text-black border-l border-gray-100 gap-1.5 px-2">
+            <div className="flex w-full items-stretch text-[0.75em] font-semibold h-full border-b border-gray-50">
+                <div className="flex-1 px-4 py-2 text-black font-bold uppercase tracking-tight border-r border-gray-200 h-full flex items-center leading-snug whitespace-normal line-clamp-2">
+                    {item["activity"]}
+                </div>
+                <div className="flex flex-wrap items-center justify-center w-[150px] text-black gap-1.5 px-2 border-r border-gray-200 h-full">
                     {item["owner"]?.split('/').map((owner, idx) => (
-                        <span key={idx} className="whitespace-nowrap px-2 py-0.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-full text-[0.85em] leading-tight font-medium">
+                        <span key={idx} className="whitespace-nowrap px-2 py-0.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-full text-[0.8em] leading-tight font-medium">
                             {owner.trim()}
                         </span>
                     ))}
+                </div>
+                <div className="w-[100px] flex items-center justify-center px-2 h-full">
+                    {(() => {
+                        if (!item["planEnd"]) return <span className="text-gray-300">-</span>;
+                        const pEnd = moment(item["planEnd"], "M/D");
+                        const aEnd = item["actualEnd"] ? moment(item["actualEnd"], "M/D") : moment();
+                        const diff = aEnd.diff(pEnd, 'days');
+
+                        if (diff > 0) return <span className="text-rose-600 font-bold">{diff}d</span>;
+                        if (diff < 0 && item['status'] === 'Not started') return <span className="text-gray-600 font-bold text-[0.8em]">Not Started</span>;
+                        return <span className="text-emerald-600 font-bold">0d</span>;
+                    })()}
                 </div>
             </div>
         ),
@@ -98,7 +111,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
             </div>
 
             <div className="flex gap-6 w-[90%] flex-col xl:flex-row">
-                <div className="flex flex-col min-w-[70%] w-full">
+                <div className="flex flex-col min-w-[80%] w-full">
                     <div className="flex justify-between items-end w-full h-fit pb-4 mb-4">
                         <div>
                             <h1 className="text-gray-900 font-extrabold text-2xl mb-1">
@@ -108,7 +121,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="flex gap-2">
-                                {['Completed', 'Ongoing', 'Delayed', 'Not Started'].map(s => (
+                                {['Completed', 'In Progress', 'Not Started'].map(s => (
                                     <div key={s} className="flex items-center gap-1.5">
                                         <span className={`w-2 h-2 rounded-full ${getStatusColor(s).split(' ')[0]}`}></span>
                                         <span className="text-[0.65em] font-semibold text-gray-500 uppercase tracking-tight">{s}</span>
@@ -133,15 +146,12 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                                 itemHeightRatio={0.7}
                                 canMove={false}
                                 canResize={false}
-                                sidebarWidth={350}
+                                sidebarWidth={450}
                                 className="custom-timeline"
                                 itemRenderer={({ item, getItemProps }) => {
                                     const statusColor = getStatusColor(item.status);
                                     const { key, ...rest } = getItemProps({
-                                        className: `${statusColor} transition-all duration-200 rounded-lg flex items-center px-3 shadow-sm border border-white/20`,
-                                        style: {
-                                            borderRadius: '8px',
-                                        }
+                                        className: `${statusColor} transition-all duration-200 rounded-sm flex items-center shadow-sm border border-white/20 group !overflow-visible`,
                                     });
                                     return (
                                         <div
@@ -149,12 +159,12 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                                             {...rest}
                                             title={`${item.title}\n${moment(item.start_time).format('MMM D')} - ${moment(item.end_time).format('MMM D, YYYY')} (${moment(item.end_time).diff(moment(item.start_time), 'days')} ${moment(item.end_time).diff(moment(item.start_time), 'days') === 1 ? 'day' : 'days'})`}
                                         >
-                                            <div className="flex flex-col justify-center overflow-hidden w-full">
-                                                <span className="text-white text-[0.75rem] font-bold truncate leading-tight">
-                                                    {item.title}
+                                            <div className="relative w-full h-full pointer-events-none">
+                                                <span className="absolute flex items-center justify-center h-[30px] right-[calc(100%+6px)] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-[0.55rem] font-bold text-gray-600 whitespace-nowrap bg-white/90 px-1.5 py-0.5 rounded border border-gray-200 shadow-sm z-50">
+                                                    {moment(item.start_time).format('MMM D')}
                                                 </span>
-                                                <span className="text-white/80 text-[0.6rem] font-medium uppercase tracking-tighter truncate">
-                                                    {item.status || 'Planned'}
+                                                <span className="absolute flex items-center justify-center h-[30px] left-[calc(100%+6px)] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-[0.55rem] font-bold text-gray-600 whitespace-nowrap bg-white/90 px-1.5 py-0.5 rounded border border-gray-200 shadow-sm z-50">
+                                                    {moment(item.end_time).clone().format('MMM D')}
                                                 </span>
                                             </div>
                                         </div>
@@ -165,13 +175,14 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                                     <SidebarHeader>
                                         {({ getRootProps }) => (
                                             <div {...getRootProps()} className="flex items-center bg-gray-50 text-gray-500 font-bold text-[0.7em] uppercase tracking-wider border-r border-gray-200">
-                                                <div className="flex-1 px-4 py-3 border-r border-gray-200 text-black text-center">Activities</div>
+                                                <div className="flex-1 px-4 py-3  text-black text-center">Activities</div>
                                                 <div className="w-[150px] px-4 py-3 text-black text-center">Owner</div>
+                                                <div className="w-[100px] px-4 py-3 text-black text-center">Delay</div>
                                             </div>
                                         )}
                                     </SidebarHeader>
                                     <DateHeader unit="month" labelFormat={(interval) => interval[0].format("MMMM YYYY")} className="bg-gray-50 font-bold" />
-                                    <DateHeader unit="week" labelFormat={(interval) => `Week ${Math.ceil((interval[0].date() + 7) / 7)}`} className="bg-gray-50 font-bold text-xs" />
+                                    <DateHeader unit="week" labelFormat={(interval) => interval[0].format("MMM D")} className="bg-gray-50 font-bold text-xs" />
                                     <TodayMarker />
                                 </TimelineHeaders>
                             </Timeline>

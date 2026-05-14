@@ -160,10 +160,10 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                                             title={`${item.title}\n${moment(item.start_time).format('MMM D')} - ${moment(item.end_time).format('MMM D, YYYY')} (${moment(item.end_time).diff(moment(item.start_time), 'days')} ${moment(item.end_time).diff(moment(item.start_time), 'days') === 1 ? 'day' : 'days'})`}
                                         >
                                             <div className="relative w-full h-full pointer-events-none">
-                                                <span className="absolute flex items-center justify-center h-[30px] right-[calc(100%+6px)] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-[0.55rem] font-bold text-gray-600 whitespace-nowrap bg-white/90 px-1.5 py-0.5 rounded border border-gray-200 shadow-sm z-50">
+                                                <span className="absolute flex items-center justify-center h-[30px] right-[calc(100%+6px)] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-[0.55rem] font-bold text-white whitespace-nowrap bg-slate-900/90 px-1.5 py-0.5 rounded border border-gray-200 shadow-sm z-50">
                                                     {moment(item.start_time).format('MMM D')}
                                                 </span>
-                                                <span className="absolute flex items-center justify-center h-[30px] left-[calc(100%+6px)] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-[0.55rem] font-bold text-gray-600 whitespace-nowrap bg-white/90 px-1.5 py-0.5 rounded border border-gray-200 shadow-sm z-50">
+                                                <span className="absolute flex items-center justify-center h-[30px] left-[calc(100%+6px)] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-[0.55rem] font-bold text-white whitespace-nowrap bg-slate-900/90 px-1.5 py-0.5 rounded border border-gray-200 shadow-sm z-50">
                                                     {moment(item.end_time).clone().format('MMM D')}
                                                 </span>
                                             </div>
@@ -171,18 +171,18 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                                     );
                                 }}
                             >
-                                <TimelineHeaders className="bg-gray-50 border-b border-gray-200 sticky top-0 z-20">
+                                <TimelineHeaders className="bg-slate-900 border-b border-slate-700 sticky top-0 z-20">
                                     <SidebarHeader>
                                         {({ getRootProps }) => (
-                                            <div {...getRootProps()} className="flex items-center bg-gray-50 text-gray-500 font-bold text-[0.7em] uppercase tracking-wider border-r border-gray-200">
-                                                <div className="flex-1 px-4 py-3  text-black text-center">Activities</div>
-                                                <div className="w-[150px] px-4 py-3 text-black text-center">Owner</div>
-                                                <div className="w-[100px] px-4 py-3 text-black text-center">Delay</div>
+                                            <div {...getRootProps()} className="flex items-center bg-slate-900 text-white font-bold text-[0.7em] uppercase tracking-wider border-r border-slate-700">
+                                                <div className="flex-1 px-4 py-3 text-center">Activities</div>
+                                                <div className="w-[150px] px-4 py-3 text-center">Owner</div>
+                                                <div className="w-[100px] px-4 py-3 text-center">Delay</div>
                                             </div>
                                         )}
                                     </SidebarHeader>
-                                    <DateHeader unit="month" labelFormat={(interval) => interval[0].format("MMMM YYYY")} className="bg-gray-50 font-bold" />
-                                    <DateHeader unit="week" labelFormat={(interval) => interval[0].format("MMM D")} className="bg-gray-50 font-bold text-xs" />
+                                    <DateHeader unit="month" labelFormat={(interval) => interval[0].format("MMMM YYYY")} className="font-bold" />
+                                    <DateHeader unit="week" labelFormat={(interval) => interval[0].format("MMM D")} className="font-bold text-xs" />
                                     <TodayMarker />
                                 </TimelineHeaders>
                             </Timeline>

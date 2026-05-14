@@ -30,3 +30,26 @@ body {
   border: none !important;
   background: transparent !important;
 }
+
+/* Timeline Header Backgrounds */
+.custom-timeline .rct-header-container,
+.custom-timeline .rct-calendar-header {
+  background: #0f172a !important;
+  /* slate-900 */
+}
+
+.custom-timeline .rct-dateHeader {
+  background: #0f172b !important;
+  /* slate-800 */
+  border-left: 1px solid #334155 !important;
+  /* slate-700 */
+  color: #e2e8f0 !important;
+  /* slate-200 */
+}
+
+/* Primary (Top) Header - Month */
+.custom-timeline .rct-dateHeader-primary {
+  background: #0f172a !important;
+  /* slate-900 */
+  color: #ffffff !important;
+}

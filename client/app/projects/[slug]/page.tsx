@@ -19,6 +19,7 @@ type ProjectProps = {
 
 const getStatusColor = (status: string) => {
     const s = status?.toLowerCase() || '';
+    if (s === 'planned') return 'bg-white !text-gray-400 border-2 border-dashed border-gray-200';
     if (s.includes('complete')) return '!bg-emerald-500 hover:!bg-emerald-600';
     if (s.includes('progress') || s.includes('ongoing')) return '!bg-sky-500 hover:!bg-sky-600';
     if (s.includes('not started') || s.includes('pending')) return '!bg-slate-400 hover:!bg-slate-500';
@@ -80,17 +81,37 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
         owner: item["owner"]
     }));
 
-    const items = filteredData.map((item, index) => ({
-        id: index,
-        group: index,
-        title: item["activity"],
-        owner: item["owner"],
-        status: item["status"],
-        start_time: moment(item["planStart"], "M/D").valueOf(),
-        end_time: moment(item["planEnd"], "M/D").add(1, 'day').valueOf(),
-        canMove: false,
-        canResize: false,
-    }));
+    const items = filteredData.flatMap((item, index) => {
+        const planItem = {
+            id: `${index}-plan`,
+            group: index,
+            title: `${item["activity"]} (Plan)`,
+            owner: item["owner"],
+            status: item['status'],
+            start_time: moment(item["planStart"], "M/D").valueOf(),
+            end_time: moment(item["planEnd"], "M/D").add(1, 'day').valueOf(),
+            canMove: false,
+            canResize: false,
+        };
+
+        const result = [planItem];
+
+        if (item["actualStart"] && item["actualEnd"]) {
+            result.push({
+                id: `${index}-actual`,
+                group: index,
+                title: `${item["activity"]} (Actual)`,
+                owner: item["owner"],
+                status: item["status"],
+                start_time: moment(item["actualStart"], "M/D").valueOf(),
+                end_time: moment(item["actualEnd"], "M/D").add(1, 'day').valueOf(),
+                canMove: false,
+                canResize: false,
+            });
+        }
+
+        return result;
+    });
 
     return (
         <section className="flex flex-col items-center bg-gray-50 min-h-screen w-screen h-fit pb-12">

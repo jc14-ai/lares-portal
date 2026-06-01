@@ -23,7 +23,7 @@ const getStatusColor = (status: string) => {
     if (s.includes('complete')) return '!bg-emerald-500 hover:!bg-emerald-600';
     if (s.includes('progress') || s.includes('ongoing')) return '!bg-sky-500 hover:!bg-sky-600';
     if (s.includes('not started') || s.includes('pending')) return '!bg-slate-400 hover:!bg-slate-500';
-    return '!bg-indigo-500 hover:!bg-indigo-600';
+    return '!bg-blue-500 hover:!bg-blue-600';
 };
 
 export default function Page({ params }: { params: Promise<{ slug: string }> }) {
@@ -204,6 +204,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                                     </SidebarHeader>
                                     <DateHeader unit="month" labelFormat={(interval) => interval[0].format("MMMM YYYY")} className="font-bold" />
                                     <DateHeader unit="week" labelFormat={(interval) => interval[0].format("MMM D")} className="font-bold text-xs" />
+                                    <DateHeader unit="day" labelFormat={(interval) => interval[0].format("D")} className="font-bold text-xs" />
                                     <TodayMarker />
                                 </TimelineHeaders>
                             </Timeline>

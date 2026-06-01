@@ -26,10 +26,7 @@ body {
 }
 
 /* Hide Timeline Grid Lines */
-.custom-timeline .rct-vl {
-  border: none !important;
-  background: transparent !important;
-}
+
 
 /* Timeline Header Backgrounds */
 .custom-timeline .rct-header-container,

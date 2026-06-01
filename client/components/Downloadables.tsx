@@ -54,7 +54,7 @@ export default function Downloadables() {
     }
 
     return (
-        <div className="flex flex-col bg-white rounded-2xl border border-gray-100 shadow-xl w-full p-6 gap-6 h-fit sticky top-28">
+        <div className="flex flex-col bg-white rounded-2xl border border-gray-100 shadow-xl w-full p-6 gap-6">
             <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
                 <div className="p-2 bg-blue-50 rounded-lg">
                     <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,12 +96,6 @@ export default function Downloadables() {
                         ))}
                     </select>
                 </div>
-            </div>
-
-            <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
-                <p className="text-[0.75em] text-amber-800 font-medium leading-relaxed">
-                    <span className="font-bold">Pro Tip:</span> Select a document from the dropdowns above to open its Google Drive location.
-                </p>
             </div>
         </div>
     )

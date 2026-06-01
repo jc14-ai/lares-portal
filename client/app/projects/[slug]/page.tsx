@@ -174,17 +174,17 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                                         if (totalMs <= 0) {
                                             background = '#3b82f6';
                                         } else {
-                                            const getPct = (time) => Math.max(0, Math.min(100, ((time - startMs) / totalMs) * 100));
-                                            let stops = [];
-                                            let pBaseEnd = getPct(planEndMs);
+                                            const getPct = (time:number) => Math.max(0, Math.min(100, ((time - startMs) / totalMs) * 100));
+                                            const stops = [];
+                                            const pBaseEnd = getPct(planEndMs);
                                             if (pBaseEnd > 0) {
                                                 stops.push(`#3b82f6 0%`, `#3b82f6 ${pBaseEnd}%`);
                                             }
-                                            let pYellowEnd = getPct(planEndMs + dayMs);
+                                            const pYellowEnd = getPct(planEndMs + dayMs);
                                             if (pYellowEnd > pBaseEnd) {
                                                 stops.push(`#eab308 ${pBaseEnd}%`, `#eab308 ${pYellowEnd}%`);
                                             }
-                                            let pOrangeEnd = getPct(planEndMs + 3 * dayMs);
+                                            const pOrangeEnd = getPct(planEndMs + 3 * dayMs);
                                             if (pOrangeEnd > pYellowEnd) {
                                                 stops.push(`#f97316 ${pYellowEnd}%`, `#f97316 ${pOrangeEnd}%`);
                                             }

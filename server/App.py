@@ -37,11 +37,23 @@ def init():
     
     worksheet = None
     if str(project) == "eSerbisyo Portal":
-        worksheet = sheet.worksheet("eSP Rebuild SOW4")
+        worksheet = sheet.worksheet("eSP Workplan SOW 4")
 
     global data
     if worksheet:
-        data = worksheet.get_all_records()
+        def is_not_int(value):
+            try:
+                int(value)
+                return False
+            except ValueError:
+                return True
+
+        data = worksheet.get_all_values()[7:]
+        data = [row[:11] for row in data]
+        data = [row[1:11] for row in data]
+        data = [row for row in data if is_not_int(row[0])]
+        data.pop(1)
+        data.pop(1)
     else:
         data = []
 
@@ -51,18 +63,13 @@ def init():
 
 @app.route("/data", methods=["GET"])
 def get_data():
+    headers = data[0]
+    rows = data[1:]
+
     records = [
-        {
-            'id': row.get('#', ''),
-            'activity': row.get("Activity", ""), 
-            'owner': row.get('Owner', ""),
-            'planStart': row.get('Plan Start', ""),
-            'planEnd': row.get('Plan End', ""),
-            'actualStart': row.get('Actual Start', ""),
-            'actualEnd': row.get('Actual End', ""),
-            'status': row.get('Status', ""),
-            'comments': row.get('Comments', "")
-        } for row in data]
+        {headers[i]: row[i] for i in range(len(headers))}
+        for row in rows
+    ]
     
     return jsonify(records)
 

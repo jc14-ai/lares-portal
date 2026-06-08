@@ -8,13 +8,16 @@ import moment from "moment";
 import { use, useEffect, useState } from "react";
 
 type ProjectProps = {
-    "activity": string;
-    "actualStart": string;
-    "actualEnd": string;
-    "planStart": string;
-    "planEnd": string;
-    "owner": string;
-    "status": "Completed" | "In progress" | "Not started";
+    wbsNumber: string;
+    taskTitle: string;
+    taskOwner: string;
+    startDate: string;
+    dueDate: string;
+    planStartDate:string;
+    planEndDate: string;
+    progressStatus: "Not started" | "In progress" | "Completed" | "Blocked";
+    duration: string;
+    pct: string;
 }
 
 
@@ -41,74 +44,179 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
         fetchData();
     }, [project]);
 
-    const filteredData = data.filter(item => item["planStart"] && item["planEnd"]);
+    const filteredData = data.filter(item => item.planStartDate && item.planEndDate);
 
-    const groups = filteredData.map((item, index) => ({
-        id: index,
+    const parseDate = (value?: string) => {
+        if (!value) return null;
+        const parsed = moment(value, ["M/D/YY", "M/D/YYYY"], true);
+        return parsed.isValid() ? parsed : null;
+    };
+
+    const getEarliestMoment = (values: string[]) => {
+        const moments = values.map(parseDate).filter((m): m is moment.Moment => m !== null);
+        return moments.length ? moment.min(moments) : null;
+    };
+
+    const getLatestMoment = (values: string[]) => {
+        const moments = values.map(parseDate).filter((m): m is moment.Moment => m !== null);
+        return moments.length ? moment.max(moments) : null;
+    };
+
+    const parseDurationValue = (value?: string) => {
+        if (!value) return 0;
+        const match = value.toString().trim().match(/-?[\d,.]+/);
+        if (!match) return 0;
+        const normalized = match[0].replace(/,/g, "");
+        const parsed = Number(normalized);
+        return Number.isFinite(parsed) ? parsed : 0;
+    };
+
+    const sprintMap = filteredData.reduce<Record<number, {
+        sprint: number;
+        tasks: ProjectProps[];
+        owners: Set<string>;
+        planStartDates: string[];
+        planEndDates: string[];
+        startDates: string[];
+        dueDates: string[];
+        statuses: Set<string>;
+        durations: number[];
+    }>>((acc, item) => {
+        const wbs = item.wbsNumber?.trim();
+        const match = wbs?.match(/^(\d+)\./);
+        if (!match) return acc;
+
+        const sprint = Number(match[1]);
+        if (Number.isNaN(sprint) || sprint < 1 || sprint > 4) return acc;
+
+        if (!acc[sprint]) {
+            acc[sprint] = {
+                sprint,
+                tasks: [],
+                owners: new Set<string>(),
+                planStartDates: [],
+                planEndDates: [],
+                startDates: [],
+                dueDates: [],
+                statuses: new Set<string>(),
+                durations: [],
+            };
+        }
+
+        acc[sprint].tasks.push(item);
+        if (item.taskOwner) acc[sprint].owners.add(item.taskOwner);
+        if (item.planStartDate) acc[sprint].planStartDates.push(item.planStartDate);
+        if (item.planEndDate) acc[sprint].planEndDates.push(item.planEndDate);
+        if (item.startDate) acc[sprint].startDates.push(item.startDate);
+        if (item.dueDate) acc[sprint].dueDates.push(item.dueDate);
+        if (item.progressStatus) acc[sprint].statuses.add(item.progressStatus);
+        if (item.duration) acc[sprint].durations.push(parseDurationValue(item.duration));
+
+        return acc;
+    }, {});
+
+    const sprintGroups = Object.values(sprintMap)
+        .sort((a, b) => a.sprint - b.sprint)
+        .map((sprint) => {
+            const firstTask = sprint.tasks.find((task) => task.wbsNumber?.trim().endsWith('.1'));
+        const planStart = parseDate(firstTask?.planStartDate || sprint.planStartDates[0]);
+        const planEnd = getLatestMoment(sprint.planEndDates);
+        const actualStart = parseDate(firstTask?.startDate) || getEarliestMoment(sprint.startDates) || planStart;
+        const actualEnd = getLatestMoment(sprint.dueDates) || planEnd;
+        const totalDuration = sprint.durations.reduce((sum, value) => sum + value, 0);
+        const durationLabel = totalDuration > 0 ? `${totalDuration} day${totalDuration === 1 ? '' : 's'}` : 'TBD';
+        const status = sprint.statuses.has('Not started')
+            ? 'Not started'
+            : sprint.statuses.has('In progress')
+                ? 'In progress'
+                : sprint.statuses.has('Blocked')
+                    ? 'Blocked'
+                    : 'Completed';
+
+        return {
+            id: sprint.sprint,
+            sprintNumber: sprint.sprint,
+            owners: Array.from(sprint.owners),
+            planStart,
+            planEnd,
+            actualStart,
+            actualEnd,
+            status,
+            totalDuration,
+            durationLabel,
+        };
+        })
+        .filter((group) => group.planStart && group.planEnd && group.actualEnd);
+
+    // Compute maximum owners count to size row height so owner chips are visible
+    const maxOwners = sprintGroups.length ? Math.max(...sprintGroups.map(g => g.owners.length)) : 1;
+    // Conservative row height calculation:
+    // - base height 48px
+    // - assume ~3 chips fit per line; additional rows add 18px each
+    // - cap the resulting height to avoid excessive row tallness
+    const chipsPerRow = 3;
+    const additionalRows = Math.max(0, Math.ceil(maxOwners / chipsPerRow) - 1);
+    const computedLineHeight = Math.min(88, 48 + additionalRows * 18);
+
+    const groups = sprintGroups.map((group) => ({
+        id: group.id,
         title: (
             <div className="flex w-full items-stretch text-[0.75em] md:text-[1.1em] font-semibold h-full border-b border-gray-50">
-                <div className="flex-1 px-4 py-2 text-black font-bold uppercase tracking-tight border-r border-gray-200 h-full flex items-center leading-snug whitespace-normal line-clamp-2">
-                    {item["activity"]}
+                <div className="flex-1 min-w-0 px-4 py-2 text-black font-bold uppercase tracking-tight border-r border-gray-200 h-full flex items-center leading-snug whitespace-normal line-clamp-2">
+                    Sprint {group.sprintNumber}
                 </div>
-                <div className="flex flex-wrap items-center justify-center w-[150px] text-black gap-1.5 px-2 border-r border-gray-200 h-full">
-                    {item["owner"]?.split('/').map((owner, idx) => (
-                        <span key={idx} className="whitespace-nowrap px-2 py-0.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-full text-[0.8em] md:text-[1.2em] leading-tight font-medium">
-                            {owner.trim()}
+                <div className="flex-1 min-w-0 flex flex-wrap items-start justify-center gap-1 px-4 py-2 text-black border-r border-gray-200 h-full">
+                    {group.owners.map((owner, idx) => (
+                        <span key={idx} className="break-words whitespace-normal rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-gray-700 text-[0.65em] md:text-[0.9em] leading-tight font-medium">
+                            {owner}
                         </span>
                     ))}
                 </div>
-                <div className="w-[100px] flex items-center justify-center px-2 h-full">
-                    {(() => {
-                        if (!item["planEnd"]) return <span className="text-gray-300">-</span>;
-                        const pEnd = moment(item["planEnd"], "M/D");
-                        const aEnd = item["actualEnd"] ? moment(item["actualEnd"], "M/D") : moment();
-                        const diff = aEnd.diff(pEnd, 'days');
-
-                        if (diff > 0) return <span className="text-rose-600 font-bold">{diff}d</span>;
-                        if (diff < 0 && item['status'] === 'Not started') return <span className="text-gray-600 font-bold text-[0.8em] md:text-[1.2em]">N/A</span>;
-                        return <span className="text-emerald-600 font-bold">0d</span>;
-                    })()}
+                <div className="flex-1 min-w-0 px-4 py-2 text-right text-black font-semibold uppercase tracking-tight h-full flex items-center justify-end">
+                    {group.durationLabel}
                 </div>
             </div>
         ),
-        owner: item["owner"]
     }));
 
-    const items = filteredData.flatMap((item, index) => {
+    const items = sprintGroups.flatMap((group) => {
         const planItem = {
-            id: `${index}-plan`,
-            group: index,
-            title: `${item["activity"]} (Plan)`,
-            owner: item["owner"],
-            status: item['status'],
-            start_time: moment(item["planStart"], "M/D").valueOf(),
-            end_time: moment(item["planEnd"], "M/D").add(1, 'day').valueOf(),
+            id: `${group.id}-plan`,
+            group: group.id,
+            title: `Sprint ${group.sprintNumber} Plan`,
+            owner: group.owners.join(', '),
+            status: group.status,
+            start_time: group.planStart!.valueOf(),
+            end_time: group.planEnd!.clone().add(1, 'day').valueOf(),
             canMove: false,
             canResize: false,
             isPlan: true,
-            planEnd: item["planEnd"]
+            planEnd: group.planEnd!.format('M/D/YY'),
         };
 
-        const result = [planItem];
+        const actualItem = group.actualStart && group.actualEnd ? {
+            id: `${group.id}-actual`,
+            group: group.id,
+            title: `Sprint ${group.sprintNumber} Actual`,
+            owner: group.owners.join(', '),
+            status: group.status,
+            start_time: group.actualStart.valueOf(),
+            end_time: group.actualEnd.clone().add(1, 'day').valueOf(),
+            canMove: false,
+            canResize: false,
+            isPlan: false,
+            planEnd: group.planEnd!.format('M/D/YY'),
+        } : null;
 
-        if (item["actualStart"] && item["actualEnd"]) {
-            result.push({
-                id: `${index}-actual`,
-                group: index,
-                title: `${item["activity"]} (Actual)`,
-                owner: item["owner"],
-                status: item["status"],
-                start_time: moment(item["actualStart"], "M/D").valueOf(),
-                end_time: moment(item["actualEnd"], "M/D").add(1, 'day').valueOf(),
-                canMove: false,
-                canResize: false,
-                isPlan: false,
-                planEnd: item["planEnd"]
-            });
-        }
-
-        return result;
+        return actualItem ? [planItem, actualItem] : [planItem];
     });
+
+    const defaultTimeStart = items.length
+        ? moment(Math.min(...items.map((item) => item.start_time))).startOf('week').valueOf()
+        : moment().startOf('week').valueOf();
+    const defaultTimeEnd = items.length
+        ? moment(Math.min(...items.map((item) => item.start_time))).startOf('week').add(1, 'week').valueOf()
+        : moment().endOf('week').valueOf();
 
     return (
         <section className="flex flex-col items-center bg-gray-50 min-h-screen w-screen h-fit pb-12">
@@ -145,14 +253,14 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                     </div>
 
                     <div className="bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden">
-                        {filteredData.length > 0 ? (
+                        {items.length > 0 ? (
                             <Timeline
                                 groups={groups}
                                 items={items}
-                                defaultTimeStart={moment().startOf('month').valueOf()}
-                                defaultTimeEnd={moment().endOf('month').valueOf()}
+                                defaultTimeStart={defaultTimeStart}
+                                defaultTimeEnd={defaultTimeEnd}
                                 stackItems
-                                lineHeight={60}
+                                lineHeight={computedLineHeight}
                                 itemHeightRatio={0.7}
                                 canMove={false}
                                 canResize={false}
@@ -168,14 +276,14 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                                         const startMs = item.start_time;
                                         const endMs = item.end_time;
                                         const totalMs = endMs - startMs;
-                                        const planEndMs = moment(item.planEnd, "M/D").valueOf();
+                                        const planEndMs = moment(item.planEnd, ["M/D/YY", "M/D/YYYY"]).valueOf();
                                         const dayMs = 24 * 60 * 60 * 1000;
-                                        
+
                                         if (totalMs <= 0) {
                                             background = '#3b82f6';
                                         } else {
-                                            const getPct = (time:number) => Math.max(0, Math.min(100, ((time - startMs) / totalMs) * 100));
-                                            const stops = [];
+                                            const getPct = (time: number) => Math.max(0, Math.min(100, ((time - startMs) / totalMs) * 100));
+                                            const stops: string[] = [];
                                             const pBaseEnd = getPct(planEndMs);
                                             if (pBaseEnd > 0) {
                                                 stops.push(`#3b82f6 0%`, `#3b82f6 ${pBaseEnd}%`);
@@ -222,14 +330,14 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                                     <SidebarHeader>
                                         {({ getRootProps }) => (
                                             <div {...getRootProps()} className="flex items-center bg-slate-900 text-white font-bold text-[0.7em] md:text-[1.05em] uppercase tracking-wider border-r border-slate-700">
-                                                <div className="flex-1 px-4 py-3 text-center">Activities</div>
-                                                <div className="w-[150px] px-4 py-3 text-center">Owner</div>
-                                                <div className="w-[100px] px-4 py-3 text-center">Delay</div>
+                                                <div className="flex-1 min-w-0 px-4 py-3 text-center">Activities</div>
+                                                <div className="flex-1 min-w-0 px-4 py-3 text-center">Owner</div>
+                                                <div className="flex-1 min-w-0 px-4 py-3 text-center">Duration</div>
                                             </div>
                                         )}
                                     </SidebarHeader>
                                     <DateHeader unit="month" labelFormat={(interval) => interval[0].format("MMMM YYYY")} className="font-bold md:text-lg" />
-                                    <DateHeader unit="week" labelFormat={(interval) => interval[0].format("MMM D")} className="font-bold text-xs md:text-sm" />
+                                    <DateHeader unit={"week" as any} labelFormat={(interval) => interval[0].format("MMM D")} className="font-bold text-xs md:text-sm" />
                                     <DateHeader unit="day" labelFormat={(interval) => interval[0].format("D")} className="font-bold text-xs md:text-sm" />
                                     <TodayMarker />
                                 </TimelineHeaders>

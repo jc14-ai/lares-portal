@@ -71,7 +71,20 @@ def get_data():
         for row in rows
     ]
     
-    return jsonify(records)
+    return jsonify([
+        {
+            "wbsNumber": record.get("WBS NUMBER"),
+            "taskTitle": record.get("TASK TITLE"),
+            "taskOwner": record.get("TASK OWNER"),
+            "startDate": record.get("START DATE"),
+            "dueDate": record.get("DUE DATE"),
+            "planStartDate": record.get("PLAN START DATE"),
+            "planEndDate": record.get("PLAN END DATE"),
+            "progressStatus": record.get("PROGRESS STATUS"),
+            "duration": record.get("DURATION"),
+            "pct": record.get("PCT OF COMPLETED TASKS")
+            } 
+        for record in records])
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001, debug=True)

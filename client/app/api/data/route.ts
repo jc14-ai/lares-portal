@@ -12,6 +12,9 @@ export async function GET(req: Request) {
     });
 
     const res = await fetch("http://127.0.0.1:5001/data");
+    if (!res.ok) {
+        return NextResponse.json([]);
+    }
     const data = await res.json();
 
     return NextResponse.json(data);

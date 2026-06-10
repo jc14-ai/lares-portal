@@ -50,3 +50,18 @@ body {
   /* slate-900 */
   color: #ffffff !important;
 }
+
+/* Highlight Weekends */
+.custom-timeline .rct-day-6,
+.custom-timeline .rct-day-0 {
+  background: rgba(37, 99, 235, 0.18) !important; /* Vivid blue grid highlight */
+  border-left: 1px solid rgba(37, 99, 235, 0.3) !important;
+  border-right: 1px solid rgba(37, 99, 235, 0.3) !important;
+}
+
+.custom-timeline .rct-calendar-header .rct-day-6,
+.custom-timeline .rct-calendar-header .rct-day-0 {
+  background: #2563eb !important; /* Solid vivid blue for headers */
+  color: #ffffff !important; /* High contrast white text */
+  font-weight: 800 !important;
+}

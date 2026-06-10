@@ -26,12 +26,17 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
     const resolvedParams = use(params);
     const project = decodeURIComponent(resolvedParams.slug);
     const [data, setData] = useState<ProjectProps[]>([]);
+    const [selectedSprintId, setSelectedSprintId] = useState<number | null>(null);
 
     useEffect(() => {
         async function fetchData() {
             try {
                 setData([]);
                 const res = await fetch(`/api/data?project=${encodeURIComponent(project)}`);
+                if (!res.ok) {
+                    setData([]);
+                    return;
+                }
                 const result = await res.json();
 
                 if (result) {
@@ -158,58 +163,138 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
     const additionalRows = Math.max(0, Math.ceil(maxOwners / chipsPerRow) - 1);
     const computedLineHeight = Math.min(88, 48 + additionalRows * 18);
 
-    const groups = sprintGroups.map((group) => ({
-        id: group.id,
-        title: (
-            <div className="flex w-full items-stretch text-[0.75em] md:text-[1.1em] font-semibold h-full border-b border-gray-50">
-                <div className="flex-1 min-w-0 px-4 py-2 text-black font-bold uppercase tracking-tight border-r border-gray-200 h-full flex items-center leading-snug whitespace-normal line-clamp-2">
-                    Sprint {group.sprintNumber}
+    const groups = sprintGroups.flatMap((group) => {
+        const sprintRow = {
+            id: group.id,
+            title: (
+                <div 
+                    className={`flex w-full items-stretch text-[0.75em] md:text-[1.1em] font-semibold h-full border-b border-gray-50 cursor-pointer transition-colors duration-200 ${selectedSprintId === group.id ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
+                    onClick={() => setSelectedSprintId(selectedSprintId === group.id ? null : group.id)}
+                >
+                    <div className="flex-1 min-w-0 px-4 py-2 text-black font-bold uppercase tracking-tight border-r border-gray-200 h-full flex items-center leading-snug whitespace-normal line-clamp-2">
+                        {selectedSprintId === group.id ? '▼' : '▶'} Sprint {group.sprintNumber}
+                    </div>
+                    <div className="flex-1 min-w-0 flex flex-wrap items-start justify-center gap-1 px-4 py-2 text-black border-r border-gray-200 h-full">
+                        {group.owners.map((owner, idx) => (
+                            <span key={idx} className="break-words whitespace-normal rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-gray-700 text-[0.65em] md:text-[0.9em] leading-tight font-medium">
+                                {owner}
+                            </span>
+                        ))}
+                    </div>
+                    <div className="flex-1 min-w-0 px-4 py-2 text-right text-black font-semibold uppercase tracking-tight h-full flex items-center justify-end">
+                        {group.durationLabel}
+                    </div>
                 </div>
-                <div className="flex-1 min-w-0 flex flex-wrap items-start justify-center gap-1 px-4 py-2 text-black border-r border-gray-200 h-full">
-                    {group.owners.map((owner, idx) => (
-                        <span key={idx} className="break-words whitespace-normal rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-gray-700 text-[0.65em] md:text-[0.9em] leading-tight font-medium">
-                            {owner}
-                        </span>
-                    ))}
-                </div>
-                <div className="flex-1 min-w-0 px-4 py-2 text-right text-black font-semibold uppercase tracking-tight h-full flex items-center justify-end">
-                    {group.durationLabel}
-                </div>
-            </div>
-        ),
-    }));
-
-    const items = sprintGroups.flatMap((group) => {
-        const planItem = {
-            id: `${group.id}-plan`,
-            group: group.id,
-            title: `Sprint ${group.sprintNumber} Plan`,
-            owner: group.owners.join(', '),
-            status: group.status,
-            start_time: group.planStart!.valueOf(),
-            end_time: group.planEnd!.clone().add(1, 'day').valueOf(),
-            canMove: false,
-            canResize: false,
-            isPlan: true,
-            planEnd: group.planEnd!.format('M/D/YY'),
+            ),
         };
 
-        const actualItem = group.actualStart && group.actualEnd ? {
-            id: `${group.id}-actual`,
-            group: group.id,
-            title: `Sprint ${group.sprintNumber} Actual`,
-            owner: group.owners.join(', '),
-            status: group.status,
-            start_time: group.actualStart.valueOf(),
-            end_time: group.actualEnd.clone().add(1, 'day').valueOf(),
-            canMove: false,
-            canResize: false,
-            isPlan: false,
-            planEnd: group.planEnd!.format('M/D/YY'),
-        } : null;
+        if (selectedSprintId === group.id) {
+            const taskRows = (sprintMap[group.id]?.tasks || []).map((task) => {
+                const cleanSidebarTitle = task.taskTitle.replace(/^Sprint\s+\d+[:\s]*/i, '');
+                return {
+                    id: `task-${task.wbsNumber}`,
+                    title: (
+                        <div className="flex w-full items-stretch text-[0.8em] md:text-[0.95em] font-bold h-full border-b border-gray-100 bg-gray-50/50 pl-8">
+                            <div className="flex-1 min-w-0 px-4 py-1.5 text-gray-800 border-r border-gray-200 h-full flex items-center leading-tight">
+                                <span className="truncate w-full" title={cleanSidebarTitle}>
+                                    {cleanSidebarTitle}
+                                </span>
+                            </div>
+                            <div className="flex-1 min-w-0 px-4 py-1.5 text-gray-600 border-r border-gray-200 h-full flex items-center justify-center italic font-semibold">
+                                <span className="truncate w-full text-center" title={task.taskOwner}>
+                                    {task.taskOwner}
+                                </span>
+                            </div>
+                            <div className="flex-1 min-w-0 px-4 py-1.5 text-right text-gray-600 h-full flex items-center justify-end font-mono font-bold">
+                                <span className="truncate w-full" title={`${task.duration} ${Number(task.duration) === 1 ? 'day' : 'days'}`}>
+                                    {task.duration} {Number(task.duration) === 1 ? 'day' : 'days'}
+                                </span>
+                            </div>
+                        </div>
+                    ),
+                };
+            });
+            return [sprintRow, ...taskRows];
+        }
 
-        return actualItem ? [planItem, actualItem] : [planItem];
+        return [sprintRow];
     });
+
+    const items = [
+        ...sprintGroups.flatMap((group) => {
+            const planItem = {
+                id: `${group.id}-plan`,
+                group: group.id,
+                title: 'Plan',
+                owner: group.owners.join(', '),
+                status: group.status,
+                start_time: group.planStart!.valueOf(),
+                end_time: group.planEnd!.clone().add(1, 'day').valueOf(),
+                canMove: false,
+                canResize: false,
+                isPlan: true,
+                planEnd: group.planEnd!.format('M/D/YY'),
+            };
+
+            const actualItem = group.actualStart && group.actualEnd ? {
+                id: `${group.id}-actual`,
+                group: group.id,
+                title: 'Actual',
+                owner: group.owners.join(', '),
+                status: group.status,
+                start_time: group.actualStart.valueOf(),
+                end_time: group.actualEnd.clone().add(1, 'day').valueOf(),
+                canMove: false,
+                canResize: false,
+                isPlan: false,
+                planEnd: group.planEnd!.format('M/D/YY'),
+            } : null;
+
+            return actualItem ? [planItem, actualItem] : [planItem];
+        }),
+        ...(selectedSprintId && sprintMap[selectedSprintId] ? sprintMap[selectedSprintId].tasks.flatMap((task) => {
+            const planStart = parseDate(task.planStartDate);
+            const planEnd = parseDate(task.planEndDate);
+            if (!planStart || !planEnd) return [];
+
+            const cleanTaskTitle = task.taskTitle.replace(/^Sprint\s+\d+[:\s]*/i, '');
+
+            const taskPlanItem = {
+                id: `task-${task.wbsNumber}-plan`,
+                group: `task-${task.wbsNumber}`,
+                title: cleanTaskTitle,
+                status: task.progressStatus,
+                start_time: planStart.valueOf(),
+                end_time: planEnd.clone().add(1, 'day').valueOf(),
+                canMove: false,
+                canResize: false,
+                isPlan: true,
+                isTask: true,
+                planEnd: planEnd.format('M/D/YY'),
+            };
+
+            const actualStart = parseDate(task.startDate);
+            const actualEnd = parseDate(task.dueDate);
+            if (actualStart && actualEnd) {
+                const taskActualItem = {
+                    id: `task-${task.wbsNumber}-actual`,
+                    group: `task-${task.wbsNumber}`,
+                    title: cleanTaskTitle,
+                    status: task.progressStatus,
+                    start_time: actualStart.valueOf(),
+                    end_time: actualEnd.clone().add(1, 'day').valueOf(),
+                    canMove: false,
+                    canResize: false,
+                    isPlan: false,
+                    isTask: true,
+                    planEnd: planEnd.format('M/D/YY'),
+                };
+                return [taskPlanItem, taskActualItem];
+            }
+
+            return [taskPlanItem];
+        }) : [])
+    ];
 
     const defaultTimeStart = items.length
         ? moment(Math.min(...items.map((item) => item.start_time))).startOf('week').valueOf()
@@ -314,13 +399,17 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                                             style={{ ...style, background }}
                                             title={`${item.title}\n${moment(item.start_time).format('MMM D')} - ${moment(item.end_time).format('MMM D, YYYY')} (${moment(item.end_time).diff(moment(item.start_time), 'days')} ${moment(item.end_time).diff(moment(item.start_time), 'days') === 1 ? 'day' : 'days'})`}
                                         >
-                                            <div className="relative w-full h-full pointer-events-none">
-                                                <span className="absolute flex items-center justify-center h-[30px] right-[calc(100%+6px)] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-[0.55rem] font-bold text-white whitespace-nowrap bg-slate-900/90 px-1.5 py-0.5 rounded border border-gray-200 shadow-sm z-50">
-                                                    {moment(item.start_time).format('MMM D')}
-                                                </span>
-                                                <span className="absolute flex items-center justify-center h-[30px] left-[calc(100%+6px)] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-[0.55rem] font-bold text-white whitespace-nowrap bg-slate-900/90 px-1.5 py-0.5 rounded border border-gray-200 shadow-sm z-50">
-                                                    {moment(item.end_time).clone().format('MMM D')}
-                                                </span>
+                                            <div className="relative w-full h-full pointer-events-none px-1">
+                                                <div className="absolute right-[calc(100%+8px)] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 z-50">
+                                                    <div className="bg-slate-900 text-white text-[0.6rem] md:text-[0.65rem] font-black px-2 py-0.5 rounded shadow-lg border border-slate-700 whitespace-nowrap">
+                                                        {moment(item.start_time).format('MMM D')}
+                                                    </div>
+                                                </div>
+                                                <div className="absolute left-[calc(100%+8px)] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 z-50">
+                                                    <div className="bg-slate-900 text-white text-[0.6rem] md:text-[0.65rem] font-black px-2 py-0.5 rounded shadow-lg border border-slate-700 whitespace-nowrap">
+                                                        {moment(item.end_time).clone().format('MMM D')}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     );
@@ -337,7 +426,6 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                                         )}
                                     </SidebarHeader>
                                     <DateHeader unit="month" labelFormat={(interval) => interval[0].format("MMMM YYYY")} className="font-bold md:text-lg" />
-                                    <DateHeader unit={"week" as any} labelFormat={(interval) => interval[0].format("MMM D")} className="font-bold text-xs md:text-sm" />
                                     <DateHeader unit="day" labelFormat={(interval) => interval[0].format("D")} className="font-bold text-xs md:text-sm" />
                                     <TodayMarker />
                                 </TimelineHeaders>

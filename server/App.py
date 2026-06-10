@@ -11,6 +11,8 @@ app = Flask(__name__)
 
 CORS(app)
 
+data = []
+
 @app.route("/", methods=["POST"])
 def init():
     
@@ -63,6 +65,9 @@ def init():
 
 @app.route("/data", methods=["GET"])
 def get_data():
+    if not data:
+        return jsonify([])
+        
     headers = data[0]
     rows = data[1:]
 

@@ -5,13 +5,13 @@ export async function GET(req: Request) {
     const project = searchParams.get("project") || "";
 
     console.log(project);
-    await fetch(`http://127.0.0.1:5001`, {
+    await fetch(`${process.env.FLASK_PUBLIC_API_URL}`, {
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({project:project})
     });
 
-    const res = await fetch("http://127.0.0.1:5001/data");
+    const res = await fetch(`${process.env.FLASK_PUBLIC_API_URL}/data`);
     if (!res.ok) {
         return NextResponse.json([]);
     }

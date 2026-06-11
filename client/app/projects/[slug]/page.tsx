@@ -20,6 +20,18 @@ type ProjectProps = {
     pct: string;
 }
 
+type RecordFilterDataProps = {
+    sprint: number;
+    tasks: ProjectProps[];
+    owners: Set<string>;
+    planStartDates: string[];
+    planEndDates: string[];
+    startDates: string[];
+    dueDates: string[];
+    statuses: Set<string>;
+    durations: number[];
+    }
+
 
 
 export default function Page({ params }: { params: Promise<{ slug: string }> }) {
@@ -76,17 +88,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
         return Number.isFinite(parsed) ? parsed : 0;
     };
 
-    const sprintMap = filteredData.reduce<Record<number, {
-        sprint: number;
-        tasks: ProjectProps[];
-        owners: Set<string>;
-        planStartDates: string[];
-        planEndDates: string[];
-        startDates: string[];
-        dueDates: string[];
-        statuses: Set<string>;
-        durations: number[];
-    }>>((acc, item) => {
+    const sprintMap = filteredData.reduce<Record<number, RecordFilterDataProps>>((acc, item) => {
         const wbs = item.wbsNumber?.trim();
         const match = wbs?.match(/^(\d+)\./);
         if (!match) return acc;
@@ -121,15 +123,15 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
     }, {});
 
     const sprintGroups = Object.values(sprintMap)
-        .sort((a, b) => a.sprint - b.sprint)
-        .map((sprint) => {
-            const firstTask = sprint.tasks.find((task) => task.wbsNumber?.trim().endsWith('.1'));
+    .sort((a, b) => a.sprint - b.sprint)
+    .map((sprint) => {
+        const firstTask = sprint.tasks.find((task) => task.wbsNumber?.trim().endsWith('.1'));
         const planStart = parseDate(firstTask?.planStartDate || sprint.planStartDates[0]);
         const planEnd = getLatestMoment(sprint.planEndDates);
         const actualStart = parseDate(firstTask?.startDate) || getEarliestMoment(sprint.startDates) || planStart;
         const actualEnd = getLatestMoment(sprint.dueDates) || planEnd;
         const totalDuration = sprint.durations.reduce((sum, value) => sum + value, 0);
-        const durationLabel = totalDuration > 0 ? `${totalDuration} day${totalDuration === 1 ? '' : 's'}` : 'TBD';
+        const durationLabel = totalDuration > 0 ? `${totalDuration} day${ totalDuration === 1 ? "" : "s"}` : "TBD";
         const status = sprint.statuses.has('Not started')
             ? 'Not started'
             : sprint.statuses.has('In progress')

@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv("credentials/.env")
+credentials_path = os.getenv("CREDENTIALS_PATH")
+port = os.getenv("FLASK_PORT")
 
 app = Flask(__name__)
 
@@ -28,7 +30,7 @@ def init():
     scope = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
     creds = Credentials.from_service_account_file(
-        "credentials/lares-dashboard-bebe72285595.json",
+        credentials_path,
         scopes=scope
     )
 
@@ -92,5 +94,5 @@ def get_data():
         for record in records])
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    app.run(host="0.0.0.0", port=port, debug=True)
     

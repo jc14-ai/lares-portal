@@ -163,7 +163,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
     // - cap the resulting height to avoid excessive row tallness
     const chipsPerRow = 3;
     const additionalRows = Math.max(0, Math.ceil(maxOwners / chipsPerRow) - 1);
-    const computedLineHeight = Math.min(88, 48 + additionalRows * 18);
+    const computedLineHeight = Math.min(96, 72 + additionalRows * 18);
 
     const groups = sprintGroups.flatMap((group) => {
         const sprintRow = {
@@ -173,48 +173,66 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                     className={`flex w-full items-stretch text-[0.75em] md:text-[1.1em] font-semibold h-full border-b border-gray-50 cursor-pointer transition-colors duration-200 ${selectedSprintId === group.id ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
                     onClick={() => setSelectedSprintId(selectedSprintId === group.id ? null : group.id)}
                 >
-                    <div className="flex-1 min-w-0 px-4 py-2 text-black font-bold uppercase tracking-tight border-r border-gray-200 h-full flex items-center leading-snug whitespace-normal line-clamp-2">
+                    <div className="w-[195px] shrink-0 px-4 py-2 text-black font-bold uppercase tracking-tight border-r border-gray-200 h-full flex items-center leading-snug whitespace-normal line-clamp-2">
                         {selectedSprintId === group.id ? '▼' : '▶'} Sprint {group.sprintNumber}
                     </div>
-                    <div className="flex-1 min-w-0 flex flex-wrap items-start justify-center gap-1 px-4 py-2 text-black border-r border-gray-200 h-full">
+                    <div className="w-[160px] shrink-0 flex flex-wrap items-start justify-center gap-1 px-2 py-2 text-black border-r border-gray-200 h-full">
                         {group.owners.map((owner, idx) => (
-                            <span key={idx} className="break-words whitespace-normal rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-gray-700 text-[0.65em] md:text-[0.9em] leading-tight font-medium">
+                            <span key={idx} className="break-words whitespace-normal px-1 py-1 text-black text-[0.65em] md:text-[0.8em] leading-tight font-bold italic">
                                 {owner}
                             </span>
                         ))}
                     </div>
-                    <div className="flex-1 min-w-0 px-4 py-2 text-right text-black font-semibold uppercase tracking-tight h-full flex items-center justify-end">
+                    <div className="w-[105px] shrink-0 px-2 py-2 text-right text-black font-semibold uppercase tracking-tight h-full flex items-center justify-end border-r border-gray-200">
                         {group.durationLabel}
+                    </div>
+                    {/* Type column for sprint row */}
+                    <div className="relative w-[90px] shrink-0 h-full">
+                        <span className="absolute top-2 inset-x-0 text-center text-[0.6em] md:text-[0.65em] font-extrabold uppercase tracking-wide text-blue-700">Actual</span>
+                        <span className="absolute bottom-2 inset-x-0 text-center text-[0.6em] md:text-[0.65em] font-extrabold uppercase tracking-wide text-emerald-700">Planned</span>
                     </div>
                 </div>
             ),
         };
 
         if (selectedSprintId === group.id) {
-            const taskRows = (sprintMap[group.id]?.tasks || []).map((task) => {
+            const taskRows = (sprintMap[group.id]?.tasks || []).flatMap((task) => {
                 const cleanSidebarTitle = task.taskTitle.replace(/^Sprint\s+\d+[:\s]*/i, '');
-                return {
-                    id: `task-${task.wbsNumber}`,
+
+                const makeRow = (type: 'Planned' | 'Actual') => ({
+                    id: `task-${task.wbsNumber}-${type.toLowerCase()}`,
                     title: (
-                        <div className="flex w-full items-stretch text-[0.8em] md:text-[0.95em] font-bold h-full border-b border-gray-100 bg-gray-50/50 pl-8">
-                            <div className="flex-1 min-w-0 px-4 py-1.5 text-gray-800 border-r border-gray-200 h-full flex items-center leading-tight">
+                        <div className={`flex w-full items-stretch text-[0.8em] md:text-[0.95em] font-bold h-full border-b border-gray-100 ${type === 'Planned' ? 'bg-emerald-50/60' : 'bg-blue-50/60'}`}>
+                            <div className="w-[195px] shrink-0 pl-8 pr-2 py-1.5 text-gray-800 border-r border-gray-200 h-full flex items-center leading-tight">
                                 <span className="truncate w-full" title={cleanSidebarTitle}>
                                     {cleanSidebarTitle}
                                 </span>
                             </div>
-                            <div className="flex-1 min-w-0 px-4 py-1.5 text-gray-600 border-r border-gray-200 h-full flex items-center justify-center italic font-semibold">
+                            <div className="w-[160px] shrink-0 px-2 py-1.5 text-gray-600 border-r border-gray-200 h-full flex items-center justify-center italic font-semibold">
                                 <span className="truncate w-full text-center" title={task.taskOwner}>
                                     {task.taskOwner}
                                 </span>
                             </div>
-                            <div className="flex-1 min-w-0 px-4 py-1.5 text-right text-gray-600 h-full flex items-center justify-end font-mono font-bold">
+                            <div className="w-[105px] shrink-0 px-2 py-1.5 text-right text-gray-600 h-full flex items-center justify-end font-bold border-r border-gray-200">
                                 <span className="truncate w-full" title={`${task.duration} ${Number(task.duration) === 1 ? 'day' : 'days'}`}>
                                     {task.duration} {Number(task.duration) === 1 ? 'day' : 'days'}
                                 </span>
                             </div>
+                            {/* Type badge column */}
+                            <div className="w-[90px] shrink-0 px-2 py-1.5 h-full flex items-center justify-center">
+                                <span className={`flex text-[0.65em] md:text-[0.7em] font-extrabold uppercase tracking-wide px-1 py-0.5 ${
+                                    type === 'Planned'
+                                        ? 'text-emerald-700'
+                                        : 'text-blue-700'
+                                }`}>
+                                    {type}
+                                </span>
+                            </div>
                         </div>
                     ),
-                };
+                });
+
+                return [makeRow('Planned'), makeRow('Actual')];
             });
             return [sprintRow, ...taskRows];
         }
@@ -261,9 +279,10 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
 
             const cleanTaskTitle = task.taskTitle.replace(/^Sprint\s+\d+[:\s]*/i, '');
 
+            // Planned row item — always present if planStart/planEnd exist
             const taskPlanItem = {
-                id: `task-${task.wbsNumber}-plan`,
-                group: `task-${task.wbsNumber}`,
+                id: `task-${task.wbsNumber}-planned-bar`,
+                group: `task-${task.wbsNumber}-planned`,
                 title: cleanTaskTitle,
                 status: task.progressStatus,
                 start_time: planStart.valueOf(),
@@ -277,24 +296,23 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
 
             const actualStart = parseDate(task.startDate);
             const actualEnd = parseDate(task.dueDate);
-            if (actualStart && actualEnd) {
-                const taskActualItem = {
-                    id: `task-${task.wbsNumber}-actual`,
-                    group: `task-${task.wbsNumber}`,
-                    title: cleanTaskTitle,
-                    status: task.progressStatus,
-                    start_time: actualStart.valueOf(),
-                    end_time: actualEnd.clone().add(1, 'day').valueOf(),
-                    canMove: false,
-                    canResize: false,
-                    isPlan: false,
-                    isTask: true,
-                    planEnd: planEnd.format('M/D/YY'),
-                };
-                return [taskPlanItem, taskActualItem];
-            }
 
-            return [taskPlanItem];
+            // Actual row item — only if actual dates exist
+            const taskActualItem = actualStart && actualEnd ? {
+                id: `task-${task.wbsNumber}-actual-bar`,
+                group: `task-${task.wbsNumber}-actual`,
+                title: cleanTaskTitle,
+                status: task.progressStatus,
+                start_time: actualStart.valueOf(),
+                end_time: actualEnd.clone().add(1, 'day').valueOf(),
+                canMove: false,
+                canResize: false,
+                isPlan: false,
+                isTask: true,
+                planEnd: planEnd.format('M/D/YY'),
+            } : null;
+
+            return taskActualItem ? [taskPlanItem, taskActualItem] : [taskPlanItem];
         }) : [])
     ];
 
@@ -351,7 +369,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                                 itemHeightRatio={0.7}
                                 canMove={false}
                                 canResize={false}
-                                sidebarWidth={450}
+                                sidebarWidth={550}
                                 className="custom-timeline"
                                 itemRenderer={({ item, getItemProps }) => {
                                     let background = '';
@@ -421,9 +439,10 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                                     <SidebarHeader>
                                         {({ getRootProps }) => (
                                             <div {...getRootProps()} className="flex items-center bg-slate-900 text-white font-bold text-[0.7em] md:text-[1.05em] uppercase tracking-wider border-r border-slate-700">
-                                                <div className="flex-1 min-w-0 px-4 py-3 text-center">Activities</div>
-                                                <div className="flex-1 min-w-0 px-4 py-3 text-center">Owner</div>
-                                                <div className="flex-1 min-w-0 px-4 py-3 text-center">Duration</div>
+                                                <div className="w-[195px] shrink-0 px-4 py-3 text-center border-r border-slate-700">Activities</div>
+                                                <div className="w-[160px] shrink-0 px-2 py-3 text-center border-r border-slate-700">Owner</div>
+                                                <div className="w-[105px] shrink-0 px-2 py-3 text-center border-r border-slate-700">Duration</div>
+                                                <div className="w-[90px] shrink-0 px-2 py-3 text-center">Type</div>
                                             </div>
                                         )}
                                     </SidebarHeader>
